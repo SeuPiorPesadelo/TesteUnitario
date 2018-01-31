@@ -49,6 +49,7 @@ public class LocacaoServiceTest {
 		u = UsuarioBuilder.umUsuario().agora();
 		count++;
 		System.out.println(count);
+		
 		LocacaoDao dao = Mockito.mock(LocacaoDao.class);
 		service.setLocacaoDao(dao);
 	}
