@@ -10,18 +10,24 @@ import br.ce.wcaquino.entidades.Filme;
 import br.ce.wcaquino.entidades.Locacao;
 import br.ce.wcaquino.entidades.Usuario;
 import br.ce.wcaquino.exception.FilmeSemEstoqueException;
+import br.ce.wcaquino.exception.LocacaoException;
 
 public class LocacaoService {
 	
 	private LocacaoDao dao;
+	private SPCService spcService;
 	
-	public Locacao alugarFilme(Usuario usuario, List<Filme> filmes) throws FilmeSemEstoqueException {
+	public Locacao alugarFilme(Usuario usuario, List<Filme> filmes) throws FilmeSemEstoqueException, LocacaoException {
 		double valoresFilmes = 0;
 		for (Filme f : filmes) {
 			if(f.getEstoque() == 0){
 				throw new FilmeSemEstoqueException();
 			}
 			valoresFilmes += f.getPrecoLocacao();
+		}
+
+		if(spcService.possuiNegativacao(usuario)){
+			throw new LocacaoException("Usuario Negativado");
 		}
 		
 		Locacao locacao = new Locacao();
@@ -58,5 +64,9 @@ public class LocacaoService {
 
 	public void setLocacaoDao(LocacaoDao dao) {
 		this.dao = dao;
+	}
+	
+	public void setSPCService(SPCService spc) {
+		this.spcService = spc;
 	}
 }

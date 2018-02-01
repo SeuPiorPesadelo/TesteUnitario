@@ -23,11 +23,14 @@ import br.ce.wcaquino.entidades.Filme;
 import br.ce.wcaquino.entidades.Locacao;
 import br.ce.wcaquino.entidades.Usuario;
 import br.ce.wcaquino.exception.FilmeSemEstoqueException;
+import br.ce.wcaquino.exception.LocacaoException;
 import br.ce.wcaquino.utils.DataUtils;
 
 public class LocacaoServiceTest {
 
 	private LocacaoService service;
+	private LocacaoDao dao;
+	private SPCService spcService;
 	private Usuario u;
 	
 	//JUnit soh zera variaveis de instancia
@@ -50,8 +53,12 @@ public class LocacaoServiceTest {
 		count++;
 		System.out.println(count);
 		
-		LocacaoDao dao = Mockito.mock(LocacaoDao.class);
+		//injeta os Mocks
+		dao = Mockito.mock(LocacaoDao.class);
 		service.setLocacaoDao(dao);
+		
+		spcService = Mockito.mock(SPCService.class);
+		service.setSPCService(spcService);
 	}
 	
 	@After
@@ -60,7 +67,7 @@ public class LocacaoServiceTest {
 	}
 	
 	@Test
-	public void teste() throws FilmeSemEstoqueException{
+	public void teste() throws FilmeSemEstoqueException, LocacaoException{
 		Filme f = FilmeBuilder.umFilme().agora();
 		Filme f1 = FilmeBuilder.umFilme().agora();
 		List<Filme> filmes = new ArrayList<Filme>();
@@ -115,7 +122,7 @@ public class LocacaoServiceTest {
 	}
 	
 	@Test
-	public void testeDescontos25PorCento() throws FilmeSemEstoqueException{
+	public void testeDescontos25PorCento() throws FilmeSemEstoqueException, LocacaoException{
 		Filme f = FilmeBuilder.umFilme().comValor(5.0).agora();
 		Filme f1 = FilmeBuilder.umFilme().comValor(3.0).agora();
 		Filme f2 = new Filme("Tempestade de Areia em Alto Mar", 1, 2.0);
@@ -129,7 +136,7 @@ public class LocacaoServiceTest {
 	}
 	
 	@Test
-	public void testeDescontos50PorCento() throws FilmeSemEstoqueException{
+	public void testeDescontos50PorCento() throws FilmeSemEstoqueException, LocacaoException{
 		Filme f = FilmeBuilder.umFilme().comValor(2.5).agora();
 		Filme f1 = FilmeBuilder.umFilme().comValor(2.6).agora();
 		Filme f2 = new Filme("Tempestade de Areia em Alto Mar", 1, 4.9);
@@ -144,7 +151,7 @@ public class LocacaoServiceTest {
 	}
 
 	@Test
-	public void testeDescontos100PorCento() throws FilmeSemEstoqueException{
+	public void testeDescontos100PorCento() throws FilmeSemEstoqueException, LocacaoException{
 		Filme f = FilmeBuilder.umFilme().comValor(2.5).agora();
 		Filme f1 = FilmeBuilder.umFilme().comValor(2.6).agora();
 		Filme f2 = new Filme("Tempestade de Areia em Alto Mar", 1, 4.9);
@@ -164,12 +171,20 @@ public class LocacaoServiceTest {
 	
 	@Test
 	@Ignore //ignora esse test por enquanto
-	public void testeNaoDevolverFilmeNoDomingo() throws FilmeSemEstoqueException{
+	public void testeNaoDevolverFilmeNoDomingo() throws FilmeSemEstoqueException, LocacaoException{
 		List<Filme> filmes = Arrays.asList(new Filme("Filme", 1, 1.5));
 		Locacao l = service.alugarFilme(u, filmes);
 		boolean ehSegunda = DataUtils.verificarDiaSemana(l.getDataRetorno(), Calendar.MONDAY);
 		Assert.assertTrue(ehSegunda);
 	}
 	
-	
+	@Test(expected=LocacaoException.class)
+	public void naoDeveAlugarFilmeParaNegativado() throws FilmeSemEstoqueException, LocacaoException{
+		Usuario u = UsuarioBuilder.umUsuario().agora();
+		List<Filme> filmes = Arrays.asList(FilmeBuilder.umFilme().agora());
+		
+		Mockito.when(spcService.possuiNegativacao(u)).thenReturn(true);
+		
+		service.alugarFilme(u, filmes);
+	}
 }
