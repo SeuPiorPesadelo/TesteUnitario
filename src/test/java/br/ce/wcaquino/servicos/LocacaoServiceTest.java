@@ -17,6 +17,7 @@ import org.junit.Test;
 import org.mockito.Mockito;
 
 import br.ce.wcaquino.builders.FilmeBuilder;
+import br.ce.wcaquino.builders.LocacaoBuilder;
 import br.ce.wcaquino.builders.UsuarioBuilder;
 import br.ce.wcaquino.dao.LocacaoDao;
 import br.ce.wcaquino.entidades.Filme;
@@ -32,6 +33,7 @@ public class LocacaoServiceTest {
 	private LocacaoDao dao;
 	private SPCService spcService;
 	private Usuario u;
+	private EmailService emailService;
 	
 	//JUnit soh zera variaveis de instancia
 	private static int count;
@@ -59,6 +61,10 @@ public class LocacaoServiceTest {
 		
 		spcService = Mockito.mock(SPCService.class);
 		service.setSPCService(spcService);
+		
+		emailService = Mockito.mock(EmailService.class);
+		service.setEmailService(emailService);
+		
 	}
 	
 	@After
@@ -178,13 +184,34 @@ public class LocacaoServiceTest {
 		Assert.assertTrue(ehSegunda);
 	}
 	
-	@Test(expected=LocacaoException.class)
-	public void naoDeveAlugarFilmeParaNegativado() throws FilmeSemEstoqueException, LocacaoException{
+	@Test
+	public void naoDeveAlugarFilmeParaNegativado() throws FilmeSemEstoqueException {
 		Usuario u = UsuarioBuilder.umUsuario().agora();
 		List<Filme> filmes = Arrays.asList(FilmeBuilder.umFilme().agora());
 		
 		Mockito.when(spcService.possuiNegativacao(u)).thenReturn(true);
 		
-		service.alugarFilme(u, filmes);
+		try {
+			service.alugarFilme(u, filmes);
+			Assert.fail();
+		} catch (LocacaoException e) {
+			e.printStackTrace();
+		}
+		
+		Mockito.verify(spcService).possuiNegativacao(u);
+	}
+	
+	@Test
+	public void deveEnviarEmailParaLocacoesAtrasadas(){
+		Usuario u = UsuarioBuilder.umUsuario().agora();
+		
+		List<Locacao> locacoes = Arrays.asList(LocacaoBuilder.umLocacao()
+				.comDataRetorno(DataUtils.obterDataComDiferencaDias(-2)).comUsuario(u).agora());
+		
+		Mockito.when(dao.obterLocacoesPendentes()).thenReturn(locacoes);
+		
+		service.notificarAtrasos();
+		
+		Mockito.verify(emailService).notificarAtrasos(u);
 	}
 }

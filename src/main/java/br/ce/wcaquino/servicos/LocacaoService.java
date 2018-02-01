@@ -16,6 +16,7 @@ public class LocacaoService {
 	
 	private LocacaoDao dao;
 	private SPCService spcService;
+	private EmailService emailService;
 	
 	public Locacao alugarFilme(Usuario usuario, List<Filme> filmes) throws FilmeSemEstoqueException, LocacaoException {
 		double valoresFilmes = 0;
@@ -61,6 +62,13 @@ public class LocacaoService {
 			locacao.setValor(0.0);
 		}
 	}
+	
+	public void notificarAtrasos(){
+		List<Locacao> locacoes = dao.obterLocacoesPendentes();
+		for (Locacao locacao : locacoes) {
+			emailService.notificarAtrasos(locacao.getUsuario());
+		}
+	}
 
 	public void setLocacaoDao(LocacaoDao dao) {
 		this.dao = dao;
@@ -69,4 +77,9 @@ public class LocacaoService {
 	public void setSPCService(SPCService spc) {
 		this.spcService = spc;
 	}
+
+	public void setEmailService(EmailService emailService) {
+		this.emailService = emailService;
+	}
+	
 }
