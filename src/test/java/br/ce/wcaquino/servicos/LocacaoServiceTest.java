@@ -203,15 +203,32 @@ public class LocacaoServiceTest {
 	
 	@Test
 	public void deveEnviarEmailParaLocacoesAtrasadas(){
-		Usuario u = UsuarioBuilder.umUsuario().agora();
+		//cenario: 2 atrasados, 1 em dia
+		Usuario u1 = UsuarioBuilder.umUsuario().agora();
+		Usuario u2 = UsuarioBuilder.umUsuario().comNome("Usuario em dia").agora();
+		Usuario u3 = UsuarioBuilder.umUsuario().comNome("Outro Usuario atrasado").agora();
+		//locacoes: 3 atrasadas, 1 em dia
+		List<Locacao> locacoes = Arrays.asList(
+				LocacaoBuilder.umLocacao().atrasado().comUsuario(u1).agora(),
+				LocacaoBuilder.umLocacao().comUsuario(u2).agora(),
+				LocacaoBuilder.umLocacao().atrasado().comUsuario(u3).agora(),
+				LocacaoBuilder.umLocacao().atrasado().comUsuario(u3).agora());
 		
-		List<Locacao> locacoes = Arrays.asList(LocacaoBuilder.umLocacao()
-				.comDataRetorno(DataUtils.obterDataComDiferencaDias(-2)).comUsuario(u).agora());
-		
+		//mock
 		Mockito.when(dao.obterLocacoesPendentes()).thenReturn(locacoes);
 		
+		//acao
 		service.notificarAtrasos();
 		
-		Mockito.verify(emailService).notificarAtrasos(u);
+		//confere quantas vezes foi chamado notificarAtrasos()
+		Mockito.verify(emailService).notificarAtrasos(u1);
+		Mockito.verify(emailService, Mockito.never()).notificarAtrasos(u2);
+		Mockito.verify(emailService, Mockito.times(2)).notificarAtrasos(u3);//2x
+		
+		//verificacao mais generica: notificacaoAtrasado() chamado em qualquer instancia de usuario
+		Mockito.verify(emailService, Mockito.times(3)).notificarAtrasos(Mockito.any(Usuario.class));
+		
+		//sem mais interacoes
+		Mockito.verifyNoMoreInteractions(emailService);
 	}
 }
