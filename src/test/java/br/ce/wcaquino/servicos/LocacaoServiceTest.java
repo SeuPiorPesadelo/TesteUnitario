@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -188,7 +189,7 @@ public class LocacaoServiceTest {
 	}
 	
 	@Test
-	public void naoDeveAlugarFilmeParaNegativado() throws FilmeSemEstoqueException {
+	public void naoDeveAlugarFilmeParaNegativado() throws Exception {
 		Usuario u = UsuarioBuilder.umUsuario().agora();
 		List<Filme> filmes = Arrays.asList(FilmeBuilder.umFilme().agora());
 		
@@ -233,5 +234,40 @@ public class LocacaoServiceTest {
 		
 		//sem mais interacoes
 		Mockito.verifyNoMoreInteractions(emailService);
+	}
+	
+	@Test
+	public void deveTratarErroNoSPC() throws Exception{
+		//cenario
+		Usuario u1 = UsuarioBuilder.umUsuario().agora();
+		List<Filme> filmes = Arrays.asList(FilmeBuilder.umFilme().agora());
+		
+		Mockito.when(spcService.possuiNegativacao(u1)).thenThrow(new Exception("Falha no SPC"));
+		
+		try {
+			//acao
+			service.alugarFilme(u1, filmes);
+		} catch (Exception e) {
+			//verificacao
+			Assert.assertTrue(e.getClass().getSimpleName().equals(LocacaoException.class.getSimpleName()));
+			Assert.assertTrue(e.getMessage().equals("Problemas com SPC, tente novamente"));
+		}
+	}
+	
+	@Test
+	public void deveProrrogarUmaLocacao(){
+		//cenario
+		Locacao l = LocacaoBuilder.umLocacao().agora();
+		//acao
+		service.prorrogarLocacao(l, 3);
+		
+		//verificacao
+		//ArgumentCaptor serve p/ pegar um objeto q eh instaciado dentro de um metodo
+		ArgumentCaptor<Locacao> argCaptor = ArgumentCaptor.forClass(Locacao.class);
+		Mockito.verify(dao).salvar(argCaptor.capture());
+		Locacao locacaoCapturada = argCaptor.getValue();
+		
+		Assert.assertEquals(locacaoCapturada.getValor(), 12.0, 0.001);
+		Assert.assertTrue(locacaoCapturada.getDataRetorno().compareTo(DataUtils.obterDataComDiferencaDias(3)) == 0);
 	}
 }

@@ -13,6 +13,7 @@ import br.ce.wcaquino.entidades.Locacao;
 import br.ce.wcaquino.entidades.Usuario;
 import br.ce.wcaquino.exception.FilmeSemEstoqueException;
 import br.ce.wcaquino.exception.LocacaoException;
+import br.ce.wcaquino.utils.DataUtils;
 
 public class LocacaoService {
 	
@@ -29,7 +30,14 @@ public class LocacaoService {
 			valoresFilmes += f.getPrecoLocacao();
 		}
 
-		if(spcService.possuiNegativacao(usuario)){
+		boolean negativado = false;
+		try {
+			negativado = spcService.possuiNegativacao(usuario);
+		} catch (Exception e) {
+			throw new LocacaoException("Problemas com SPC, tente novamente");
+		}
+		
+		if(negativado){
 			throw new LocacaoException("Usuario Negativado");
 		}
 		
@@ -72,6 +80,22 @@ public class LocacaoService {
 				emailService.notificarAtrasos(locacao.getUsuario());
 			}
 		}
+	}
+	
+	/**
+	 * Pega uma locacao existente a cria uma nova
+	 * 
+	 * @param l
+	 * @param dias
+	 */
+	public void prorrogarLocacao(Locacao l, int dias){
+		Locacao novaLocacao = new Locacao();
+		novaLocacao.setUsuario(l.getUsuario());
+		novaLocacao.setFilmes(l.getFilmes());
+		novaLocacao.setDataLocacao(new Date());
+		novaLocacao.setDataRetorno(DataUtils.obterDataComDiferencaDias(dias));
+		novaLocacao.setValor(l.getValor() * dias);
+		dao.salvar(novaLocacao);
 	}
 
 	//nao precisa mais dos Set's pq o MockitoAnnotations.initMocks(this);
