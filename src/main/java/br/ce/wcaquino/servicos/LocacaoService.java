@@ -5,6 +5,8 @@ import static br.ce.wcaquino.utils.DataUtils.adicionarDias;
 import java.util.Date;
 import java.util.List;
 
+import org.mockito.MockitoAnnotations;
+
 import br.ce.wcaquino.dao.LocacaoDao;
 import br.ce.wcaquino.entidades.Filme;
 import br.ce.wcaquino.entidades.Locacao;
@@ -72,16 +74,16 @@ public class LocacaoService {
 		}
 	}
 
-	public void setLocacaoDao(LocacaoDao dao) {
-		this.dao = dao;
-	}
-	
-	public void setSPCService(SPCService spc) {
-		this.spcService = spc;
-	}
-
-	public void setEmailService(EmailService emailService) {
-		this.emailService = emailService;
-	}
+	//nao precisa mais dos Set's pq o MockitoAnnotations.initMocks(this);
+	//já está injetando os mocks
+//	public void setLocacaoDao(LocacaoDao dao) {
+//		this.dao = dao;
+//	}
+//	public void setSPCService(SPCService spc) {
+//		this.spcService = spc;
+//	}
+//	public void setEmailService(EmailService emailService) {
+//		this.emailService = emailService;
+//	}
 	
 }

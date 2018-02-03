@@ -14,7 +14,10 @@ import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Ignore;
 import org.junit.Test;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
 import org.mockito.Mockito;
+import org.mockito.MockitoAnnotations;
 
 import br.ce.wcaquino.builders.FilmeBuilder;
 import br.ce.wcaquino.builders.LocacaoBuilder;
@@ -29,14 +32,33 @@ import br.ce.wcaquino.utils.DataUtils;
 
 public class LocacaoServiceTest {
 
-	private LocacaoService service;
-	private LocacaoDao dao;
-	private SPCService spcService;
 	private Usuario u;
+	
+	//diz quem sao os mocks
+	@Mock
+	private LocacaoDao dao;
+	@Mock
+	private SPCService spcService;
+	@Mock
 	private EmailService emailService;
 	
-	//JUnit soh zera variaveis de instancia
-	private static int count;
+	@InjectMocks//injeta os mocks na classe de teste
+	private LocacaoService service;
+	
+	@Before
+	public void init(){
+		//inicializa soh os mocks e os injeta
+		MockitoAnnotations.initMocks(this);
+//		service	= new LocacaoService();
+//		u = UsuarioBuilder.umUsuario().agora();
+//		//injeta os Mocks
+//		dao = Mockito.mock(LocacaoDao.class);
+//		service.setLocacaoDao(dao);
+//		spcService = Mockito.mock(SPCService.class);
+//		service.setSPCService(spcService);
+//		emailService = Mockito.mock(EmailService.class);
+//		service.setEmailService(emailService);
+	}
 
 	@BeforeClass //tem q ser static
 	public static void initClass(){
@@ -46,25 +68,6 @@ public class LocacaoServiceTest {
 	@AfterClass //tem q ser static
 	public static void endClass(){
 		System.out.println("After Class");
-	}
-	
-	@Before
-	public void init(){
-		service	= new LocacaoService();
-		u = UsuarioBuilder.umUsuario().agora();
-		count++;
-		System.out.println(count);
-		
-		//injeta os Mocks
-		dao = Mockito.mock(LocacaoDao.class);
-		service.setLocacaoDao(dao);
-		
-		spcService = Mockito.mock(SPCService.class);
-		service.setSPCService(spcService);
-		
-		emailService = Mockito.mock(EmailService.class);
-		service.setEmailService(emailService);
-		
 	}
 	
 	@After
